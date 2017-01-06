@@ -21502,6 +21502,10 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
+	var _reactDom = __webpack_require__(33);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -21517,7 +21521,7 @@
 	    'button',
 	    { className: 'square', onClick: function onClick() {
 	        return props.onClick();
-	      } },
+	      }, key: props.index },
 	    props.value
 	  );
 	}
@@ -21545,7 +21549,7 @@
 
 	      return _react2.default.createElement(Square, { value: this.state.squares[i], onClick: function onClick() {
 	          return _this2.handleClick(i);
-	        }, key: i });
+	        }, index: i, key: i });
 	    }
 	  }, {
 	    key: 'handleClick',
@@ -21562,16 +21566,31 @@
 	    }
 	  }, {
 	    key: 'forLoop',
-	    value: function forLoop(min, max) {
-	      var str = [];
-	      for (var i = min; i < max; i++) {
-	        str.push(this.renderSquare(i));
+	    value: function forLoop() {
+	      var rows = this.props.rows;
+	      var cols = this.props.cols;
+	      var index = 0;
+	      var temp = [];
+	      var boardRows = [];
+	      for (var u = 1; u <= rows; u++) {
+	        for (var i = 1; i <= cols; i++) {
+	          temp.push(this.renderSquare(index));
+	          index = index + 1;
+	        };
+	        boardRows.push(_react2.default.createElement(
+	          'div',
+	          { className: 'board-row', key: u },
+	          temp
+	        ));
+	        temp = [];
 	      }
-	      return str;
+	      return boardRows;
 	    }
 	  }, {
 	    key: 'render',
 	    value: function render() {
+	      var _this3 = this;
+
 	      var winner = calculateWinner(this.state.squares);
 	      var status = void 0;
 	      if (winner) {
@@ -21587,22 +21606,24 @@
 	          { className: 'status' },
 	          status
 	        ),
+	        this.forLoop(),
+	        _react2.default.createElement('br', null),
 	        _react2.default.createElement(
-	          'div',
-	          { className: 'board-row' },
-	          this.forLoop(0, 10)
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'board-row' },
-	          this.forLoop(10, 20)
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'board-row' },
-	          this.forLoop(20, 30)
+	          'button',
+	          { onClick: function onClick() {
+	              return _this3.ulangi();
+	            } },
+	          'Reset Game'
 	        )
 	      );
+	    }
+	  }, {
+	    key: 'ulangi',
+	    value: function ulangi() {
+	      this.setState({
+	        squares: Array(100).fill(null)
+	      });
+	      _reactDom2.default.render(_react2.default.createElement(Game, null), document.getElementById('container'));
 	    }
 	  }]);
 
@@ -21615,17 +21636,24 @@
 	  function Game() {
 	    _classCallCheck(this, Game);
 
-	    return _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).apply(this, arguments));
+	    var _this4 = _possibleConstructorReturn(this, (Game.__proto__ || Object.getPrototypeOf(Game)).call(this));
+
+	    _this4.state = {
+	      // input how many rows, columns, and strikes
+	      rows: 3,
+	      cols: 10,
+	      strikes: 3 //still does not work if changed
+	    };
+	    return _this4;
 	  }
 
 	  _createClass(Game, [{
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      // input how many rows, columns, and strikes
-	      var rows = 3;
-	      var cols = 10;
-	      var strikes = 3;
 	      // preparation variables
+	      var rows = this.state.rows;
+	      var cols = this.state.cols;
+	      var strikes = this.state.strikes;
 	      var nilaiAkhir;
 	      var nilaiAkhir2;
 	      var a, b, c;
@@ -21689,7 +21717,7 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'game-board' },
-	          _react2.default.createElement(Board, null)
+	          _react2.default.createElement(Board, { cols: this.state.cols, rows: this.state.rows })
 	        ),
 	        _react2.default.createElement(
 	          'div',

@@ -1,9 +1,10 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 var lines = [];
 
 function Square(props) {
   return (
-    <button className="square" onClick={() => props.onClick()}>
+    <button className="square" onClick={() => props.onClick()} key={props.index}>
       {props.value}
     </button>
   );
@@ -19,7 +20,7 @@ class Board extends React.Component {
     this.forLoop = this.forLoop.bind(this);
   }
   renderSquare(i) {
-    return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} key={i}/>;
+    return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} index={i} key={i}/>;
   }
   handleClick(i) {
     const squares = this.state.squares.slice();
@@ -32,13 +33,22 @@ class Board extends React.Component {
       xIsNext: !this.state.xIsNext,
     });
   }
-  forLoop(min,max){
-    var str=[];
-    for (let i = min; i < max; i++) {
-      str.push(this.renderSquare(i));
+  forLoop(){
+    let rows = this.props.rows;
+    let cols = this.props.cols;
+    var index = 0;
+    var temp=[];
+    var boardRows=[];
+    for (let u = 1; u <= rows; u++){
+      for (let i = 1; i <= cols; i++) {
+      temp.push(this.renderSquare(index));
+      index = index + 1;
+      };
+    boardRows.push(<div className="board-row" key={u}>{temp}</div>);
+    temp = [];
     }
     return (
-      str
+      boardRows
     )
   }
   render() {
@@ -52,27 +62,38 @@ class Board extends React.Component {
     return (
       <div>
         <div className='status'>{status}</div>
-        <div className='board-row'>
-          {this.forLoop(0,10)}
-        </div>
-        <div className="board-row">
-          {this.forLoop(10,20)}
-        </div>
-        <div className="board-row">
-          {this.forLoop(20,30)}
-        </div>
+          {this.forLoop()}
+          <br/>
+        <button onClick={() =>this.ulangi()}>Reset Game</button>
       </div>
     );
+  }
+  ulangi(){
+    this.setState({
+      squares:Array(100).fill(null)
+    })
+    ReactDOM.render(
+      <Game />,
+      document.getElementById('container')
+    )
   }
 }
 
 class Game extends React.Component {
+  constructor(){
+    super();
+    this.state = {
+    // input how many rows, columns, and strikes
+      rows : 3,
+      cols : 10,
+      strikes : 3 //still does not work if changed
+    }
+  }
   componentWillMount(){
-  // input how many rows, columns, and strikes
-    var rows = 3;
-    var cols = 10;
-    var strikes = 3;
   // preparation variables
+    let rows = this.state.rows;
+    let cols = this.state.cols;
+    let strikes = this.state.strikes;
     var nilaiAkhir;
     var nilaiAkhir2;
     var a,b,c;
@@ -131,7 +152,7 @@ class Game extends React.Component {
     return (
       <div className="game">
         <div className="game-board">
-          <Board />
+          <Board cols={this.state.cols} rows={this.state.rows}/>
         </div>
         <div className="game-info">
           <div>{/* status */}</div>
