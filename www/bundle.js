@@ -21510,6 +21510,8 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+	var lines = [];
+
 	function Square(props) {
 	  return _react2.default.createElement(
 	    'button',
@@ -21529,9 +21531,10 @@
 	    var _this = _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).call(this));
 
 	    _this.state = {
-	      squares: Array(9).fill(null),
+	      squares: Array(100).fill(null),
 	      xIsNext: true
 	    };
+	    _this.forLoop = _this.forLoop.bind(_this);
 	    return _this;
 	  }
 
@@ -21542,7 +21545,7 @@
 
 	      return _react2.default.createElement(Square, { value: this.state.squares[i], onClick: function onClick() {
 	          return _this2.handleClick(i);
-	        } });
+	        }, key: i });
 	    }
 	  }, {
 	    key: 'handleClick',
@@ -21556,6 +21559,15 @@
 	        squares: squares,
 	        xIsNext: !this.state.xIsNext
 	      });
+	    }
+	  }, {
+	    key: 'forLoop',
+	    value: function forLoop(min, max) {
+	      var str = [];
+	      for (var i = min; i < max; i++) {
+	        str.push(this.renderSquare(i));
+	      }
+	      return str;
 	    }
 	  }, {
 	    key: 'render',
@@ -21578,23 +21590,17 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'board-row' },
-	          this.renderSquare(0),
-	          this.renderSquare(1),
-	          this.renderSquare(2)
+	          this.forLoop(0, 10)
 	        ),
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'board-row' },
-	          this.renderSquare(3),
-	          this.renderSquare(4),
-	          this.renderSquare(5)
+	          this.forLoop(10, 20)
 	        ),
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'board-row' },
-	          this.renderSquare(6),
-	          this.renderSquare(7),
-	          this.renderSquare(8)
+	          this.forLoop(20, 30)
 	        )
 	      );
 	    }
@@ -21613,6 +21619,68 @@
 	  }
 
 	  _createClass(Game, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      // input how many rows, columns, and strikes
+	      var rows = 3;
+	      var cols = 10;
+	      var strikes = 3;
+	      // preparation variables
+	      var nilaiAkhir;
+	      var nilaiAkhir2;
+	      var a, b, c;
+	      // push horizontal lines
+	      a = 0;
+	      b = 1;
+	      c = 2;
+	      nilaiAkhir = cols - (strikes - 1);
+	      nilaiAkhir2 = rows + 1;
+	      for (var u = 1; u < nilaiAkhir2; u++) {
+	        loopABC();
+	        a = u * cols;
+	        b = a + 1;
+	        c = b + 1;
+	      };
+	      lines.push([a, b, c]);
+	      //push vertical lines
+	      a = 0;
+	      b = cols;
+	      c = cols * 2;
+	      nilaiAkhir = cols;
+	      nilaiAkhir2 = rows - strikes + 1;
+	      for (var _u = 1; _u <= nilaiAkhir2; _u++) {
+	        loopABC();
+	        a = cols * _u;
+	        b = cols * (_u + 1);
+	        c = cols * (_u + 2);
+	      };
+	      lines.push([a, b, c]);
+	      // push diagonal1 lines
+	      a = 0;
+	      b = cols + 1;
+	      c = b + (cols + 1);
+	      nilaiAkhir = cols - (strikes - 1);
+	      loopABC();
+	      lines.push([a, b, c]);
+	      // push diagonal2 lines
+	      a = strikes - 1;
+	      b = cols + 1;
+	      c = cols * 2;
+	      nilaiAkhir = cols - (strikes - 1);
+	      loopABC();
+	      lines.push([a, b, c]);
+	      // make a loop function
+	      function loopABC() {
+	        for (var i = 0; i < nilaiAkhir; i++) {
+	          // console.log(a,b,c);
+	          lines.push([a, b, c]);
+	          a = a + 1;
+	          b = b + 1;
+	          c = c + 1;
+	        };
+	      }
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
@@ -21636,10 +21704,9 @@
 	  return Game;
 	}(_react2.default.Component);
 
-	// ========================================
+	// ===============================================================================================================
 
 	function calculateWinner(squares) {
-	  var lines = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
 	  for (var i = 0; i < lines.length; i++) {
 	    var _lines$i = _slicedToArray(lines[i], 3),
 	        a = _lines$i[0],
