@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-var lines = [];
+var win = false;
+
 
 function Square(props) {
   return (
@@ -11,10 +12,11 @@ function Square(props) {
 }
 
 class Board extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.state = {
-      squares: Array(100).fill(null),
+      index: 0,
+      squares: Array(this.props.rows * this.props.cols).fill(null),
       xIsNext: true,
     };
     this.forLoop = this.forLoop.bind(this);
@@ -23,12 +25,16 @@ class Board extends React.Component {
     return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)} index={i} key={i}/>;
   }
   handleClick(i) {
+    let cols = this.props.cols;
+    let strikes = this.props.strikes;
     const squares = this.state.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
+    var winner = calculateWinner(squares, i, cols, strikes);
+    if ((win == true) || squares[i]) {
       return;
     }
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
+      index: i,
       squares: squares,
       xIsNext: !this.state.xIsNext,
     });
@@ -41,36 +47,44 @@ class Board extends React.Component {
     var boardRows=[];
     for (let u = 1; u <= rows; u++){
       for (let i = 1; i <= cols; i++) {
-      temp.push(this.renderSquare(index));
-      index = index + 1;
+        temp.push(this.renderSquare(index));
+        index = index + 1;
       };
-    boardRows.push(<div className="board-row" key={u}>{temp}</div>);
-    temp = [];
+      boardRows.push(<div className="board-row" key={u}>{temp}</div>);
+      temp = [];
     }
     return (
       boardRows
     )
   }
   render() {
-    const winner = calculateWinner(this.state.squares);
+    let cols = this.props.cols;
+    let strikes = this.props.strikes;
+    let i = this.state.index;
+    const winner = calculateWinner(this.state.squares, i, cols, strikes);
+    let draw = drawGame(this.state.squares);
     let status;
     if (winner) {
       status = 'Winner: ' + winner;
+    } else if (draw){
+      status = 'Game Draw';
     } else {
       status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
     }
     return (
       <div>
         <div className='status'>{status}</div>
-          {this.forLoop()}
-          <br/>
+        {this.forLoop()}
+        <br/>
         <button onClick={() =>this.ulangi()}>Reset Game</button>
       </div>
     );
   }
   ulangi(){
+    win = false;
     this.setState({
-      squares:Array(100).fill(null)
+      squares:Array(this.props.rows * this.props.cols).fill(null),
+      xIsNext:true
     })
     ReactDOM.render(
       <Game />,
@@ -84,75 +98,17 @@ class Game extends React.Component {
     super();
     this.state = {
     // input how many rows, columns, and strikes
-      rows : 3,
+      rows : 10,
       cols : 10,
-      strikes : 3 //still does not work if changed
+      strikes : 10
     }
   }
-  componentWillMount(){
-  // preparation variables
-    let rows = this.state.rows;
-    let cols = this.state.cols;
-    let strikes = this.state.strikes;
-    var nilaiAkhir;
-    var nilaiAkhir2;
-    var a,b,c;
-  // push horizontal lines
-    a=0;
-    b=1;
-    c=2;
-    nilaiAkhir = cols - (strikes - 1);
-    nilaiAkhir2 = rows + 1;
-    for (let u = 1; u < nilaiAkhir2; u++){
-      loopABC();
-      a = u * cols;
-      b = a + 1;
-      c = b + 1;
-    };
-    lines.push([a,b,c]);
-  //push vertical lines
-    a = 0;
-    b = cols;
-    c = cols * 2;
-    nilaiAkhir = cols;
-    nilaiAkhir2 = (rows - strikes) + 1;
-    for (let u = 1; u <= nilaiAkhir2; u++){
-      loopABC();  
-      a = cols * u;
-      b = cols * (u + 1);
-      c = cols * (u + 2);
-    };
-    lines.push([a,b,c]);
-  // push diagonal1 lines
-    a = 0;
-    b = cols + 1;
-    c = b + (cols + 1);
-    nilaiAkhir = cols - (strikes - 1);
-    loopABC();
-    lines.push([a,b,c]);
-  // push diagonal2 lines
-    a = strikes - 1;
-    b = cols + 1;
-    c = cols * 2;
-    nilaiAkhir = cols - (strikes - 1);
-    loopABC();
-    lines.push([a,b,c]);
-  // make a loop function
-    function loopABC(){
-      for (let i = 0; i < nilaiAkhir; i++){
-        // console.log(a,b,c);
-        lines.push([a,b,c]);
-        a = a + 1;
-        b = b + 1;
-        c = c + 1;
-      };
-    }
-  }
+
   render() {
     return (
       <div className="game">
         <div className="game-board">
-          <Board cols={this.state.cols} rows={this.state.rows}/>
+          <Board cols={this.state.cols} rows={this.state.rows} strikes={this.state.strikes}/>
         </div>
         <div className="game-info">
           <div>{/* status */}</div>
@@ -165,13 +121,82 @@ class Game extends React.Component {
 
 // ===============================================================================================================
 
-function calculateWinner(squares) {
-  for (let i = 0; i < lines.length; i++) {
-    const [a, b, c] = lines[i];
-    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
-    }
+function calculateWinner(squares, index, cols, strikes) {
+  var counter;
+  var handle = true;
+  var a = squares[index];
+  var b = index;
+  var c = index;
+  if (win === false){
+    // ----------------------------------------------diagonal1
+    counter = cols + 1;
+    loop();
+  };
+  if (win === false){
+    // ----------------------------------------------diagonal2
+    counter = cols - 1;  
+    loop();    
+  };
+  if (win === false){
+    // ----------------------------------------------horizontal
+    counter = 1;
+    loop();
+  };
+  if (win === false){
+    // ----------------------------------------------vertical
+    counter = cols;
+    loop();
+  };
+  if (win === true){
+    const output = squares[index];
+    return output;
+  } else {
+    return null
+  };
+  // ----------------------------------------------loop function  
+  function loop(){
+    for (let i = 0; i < strikes; i++){
+      if (handle === true){
+        if ((a === squares[b]) && (a !== null)){
+          handle = true;
+          win = true;
+          b = b + counter;
+        } else {
+          handle = false;
+          win = false;
+        };
+      };
+    };
+    for (let i = 0; i < strikes; i++){
+      if (handle === false){
+        if ((a === squares[c])&&(a !== null)){
+          handle = false;
+          win = true;
+          c = c - counter;
+        } else {
+          handle = true;
+          win = false;
+        };
+      };
+    };
+    handle = true;
+    b = index;
+    c = index;
   }
-  return null;
 };
+
+function drawGame(squares){
+  var length = squares.length;
+  var draw = false;
+  for (let i = 0; i <= length; i++){
+    if (squares[i] !== null){
+      draw = true;
+    } else {
+      i = length + 1;
+      draw = false;
+    };
+  };
+  return draw
+};
+
 export default Game;

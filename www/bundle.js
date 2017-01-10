@@ -21494,8 +21494,6 @@
 	  value: true
 	});
 
-	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _react = __webpack_require__(2);
@@ -21514,7 +21512,7 @@
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var lines = [];
+	var win = false;
 
 	function Square(props) {
 	  return _react2.default.createElement(
@@ -21529,13 +21527,14 @@
 	var Board = function (_React$Component) {
 	  _inherits(Board, _React$Component);
 
-	  function Board() {
+	  function Board(props) {
 	    _classCallCheck(this, Board);
 
-	    var _this = _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).call(this));
+	    var _this = _possibleConstructorReturn(this, (Board.__proto__ || Object.getPrototypeOf(Board)).call(this, props));
 
 	    _this.state = {
-	      squares: Array(100).fill(null),
+	      index: 0,
+	      squares: Array(_this.props.rows * _this.props.cols).fill(null),
 	      xIsNext: true
 	    };
 	    _this.forLoop = _this.forLoop.bind(_this);
@@ -21554,12 +21553,16 @@
 	  }, {
 	    key: 'handleClick',
 	    value: function handleClick(i) {
+	      var cols = this.props.cols;
+	      var strikes = this.props.strikes;
 	      var squares = this.state.squares.slice();
-	      if (calculateWinner(squares) || squares[i]) {
+	      var winner = calculateWinner(squares, i, cols, strikes);
+	      if (win == true || squares[i]) {
 	        return;
 	      }
 	      squares[i] = this.state.xIsNext ? 'X' : 'O';
 	      this.setState({
+	        index: i,
 	        squares: squares,
 	        xIsNext: !this.state.xIsNext
 	      });
@@ -21591,10 +21594,16 @@
 	    value: function render() {
 	      var _this3 = this;
 
-	      var winner = calculateWinner(this.state.squares);
+	      var cols = this.props.cols;
+	      var strikes = this.props.strikes;
+	      var i = this.state.index;
+	      var winner = calculateWinner(this.state.squares, i, cols, strikes);
+	      var draw = drawGame(this.state.squares);
 	      var status = void 0;
 	      if (winner) {
 	        status = 'Winner: ' + winner;
+	      } else if (draw) {
+	        status = 'Game Draw';
 	      } else {
 	        status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
 	      }
@@ -21620,8 +21629,10 @@
 	  }, {
 	    key: 'ulangi',
 	    value: function ulangi() {
+	      win = false;
 	      this.setState({
-	        squares: Array(100).fill(null)
+	        squares: Array(this.props.rows * this.props.cols).fill(null),
+	        xIsNext: true
 	      });
 	      _reactDom2.default.render(_react2.default.createElement(Game, null), document.getElementById('container'));
 	    }
@@ -21640,75 +21651,14 @@
 
 	    _this4.state = {
 	      // input how many rows, columns, and strikes
-	      rows: 3,
+	      rows: 10,
 	      cols: 10,
-	      strikes: 3 //still does not work if changed
+	      strikes: 10
 	    };
 	    return _this4;
 	  }
 
 	  _createClass(Game, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      // preparation variables
-	      var rows = this.state.rows;
-	      var cols = this.state.cols;
-	      var strikes = this.state.strikes;
-	      var nilaiAkhir;
-	      var nilaiAkhir2;
-	      var a, b, c;
-	      // push horizontal lines
-	      a = 0;
-	      b = 1;
-	      c = 2;
-	      nilaiAkhir = cols - (strikes - 1);
-	      nilaiAkhir2 = rows + 1;
-	      for (var u = 1; u < nilaiAkhir2; u++) {
-	        loopABC();
-	        a = u * cols;
-	        b = a + 1;
-	        c = b + 1;
-	      };
-	      lines.push([a, b, c]);
-	      //push vertical lines
-	      a = 0;
-	      b = cols;
-	      c = cols * 2;
-	      nilaiAkhir = cols;
-	      nilaiAkhir2 = rows - strikes + 1;
-	      for (var _u = 1; _u <= nilaiAkhir2; _u++) {
-	        loopABC();
-	        a = cols * _u;
-	        b = cols * (_u + 1);
-	        c = cols * (_u + 2);
-	      };
-	      lines.push([a, b, c]);
-	      // push diagonal1 lines
-	      a = 0;
-	      b = cols + 1;
-	      c = b + (cols + 1);
-	      nilaiAkhir = cols - (strikes - 1);
-	      loopABC();
-	      lines.push([a, b, c]);
-	      // push diagonal2 lines
-	      a = strikes - 1;
-	      b = cols + 1;
-	      c = cols * 2;
-	      nilaiAkhir = cols - (strikes - 1);
-	      loopABC();
-	      lines.push([a, b, c]);
-	      // make a loop function
-	      function loopABC() {
-	        for (var i = 0; i < nilaiAkhir; i++) {
-	          // console.log(a,b,c);
-	          lines.push([a, b, c]);
-	          a = a + 1;
-	          b = b + 1;
-	          c = c + 1;
-	        };
-	      }
-	    }
-	  }, {
 	    key: 'render',
 	    value: function render() {
 	      return _react2.default.createElement(
@@ -21717,7 +21667,7 @@
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'game-board' },
-	          _react2.default.createElement(Board, { cols: this.state.cols, rows: this.state.rows })
+	          _react2.default.createElement(Board, { cols: this.state.cols, rows: this.state.rows, strikes: this.state.strikes })
 	        ),
 	        _react2.default.createElement(
 	          'div',
@@ -21734,19 +21684,84 @@
 
 	// ===============================================================================================================
 
-	function calculateWinner(squares) {
-	  for (var i = 0; i < lines.length; i++) {
-	    var _lines$i = _slicedToArray(lines[i], 3),
-	        a = _lines$i[0],
-	        b = _lines$i[1],
-	        c = _lines$i[2];
-
-	    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-	      return squares[a];
-	    }
+	function calculateWinner(squares, index, cols, strikes) {
+	  var counter;
+	  var handle = true;
+	  var a = squares[index];
+	  var b = index;
+	  var c = index;
+	  if (win === false) {
+	    // ----------------------------------------------diagonal1
+	    counter = cols + 1;
+	    loop();
+	  };
+	  if (win === false) {
+	    // ----------------------------------------------diagonal2
+	    counter = cols - 1;
+	    loop();
+	  };
+	  if (win === false) {
+	    // ----------------------------------------------horizontal
+	    counter = 1;
+	    loop();
+	  };
+	  if (win === false) {
+	    // ----------------------------------------------vertical
+	    counter = cols;
+	    loop();
+	  };
+	  if (win === true) {
+	    var output = squares[index];
+	    return output;
+	  } else {
+	    return null;
+	  };
+	  // ----------------------------------------------loop function  
+	  function loop() {
+	    for (var i = 0; i < strikes; i++) {
+	      if (handle === true) {
+	        if (a === squares[b] && a !== null) {
+	          handle = true;
+	          win = true;
+	          b = b + counter;
+	        } else {
+	          handle = false;
+	          win = false;
+	        };
+	      };
+	    };
+	    for (var _i = 0; _i < strikes; _i++) {
+	      if (handle === false) {
+	        if (a === squares[c] && a !== null) {
+	          handle = false;
+	          win = true;
+	          c = c - counter;
+	        } else {
+	          handle = true;
+	          win = false;
+	        };
+	      };
+	    };
+	    handle = true;
+	    b = index;
+	    c = index;
 	  }
-	  return null;
 	};
+
+	function drawGame(squares) {
+	  var length = squares.length;
+	  var draw = false;
+	  for (var i = 0; i <= length; i++) {
+	    if (squares[i] !== null) {
+	      draw = true;
+	    } else {
+	      i = length + 1;
+	      draw = false;
+	    };
+	  };
+	  return draw;
+	};
+
 	exports.default = Game;
 
 /***/ }
